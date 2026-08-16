@@ -1,0 +1,9 @@
+{
+  "name": "pdf-paint",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local PDF-to-bitmap paint editor. No dependencies at runtime — pdf.js and pdf-lib are vendored in ./vendor.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

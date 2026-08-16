@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PDF Paint — paint on any PDF, privately</title>
+<meta name="description" content="Rasterize a PDF and paint on it with MS-Paint-style tools, then save it back to PDF. Runs entirely in your browser — no upload, no account, no server." />
+<meta name="theme-color" content="#1b1d21" />
+<meta name="color-scheme" content="dark" />
+<link rel="stylesheet" href="style.css" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<link rel="manifest" href="manifest.webmanifest" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">🖌️ PDF&nbsp;Paint</div>
+
+  <div class="group">
+    <button id="btn-open" class="btn primary">Open PDF / Image</button>
+    <label class="field" title="Rasterization quality — set before opening a file">
+      DPI
+      <select id="dpi">
+        <option value="96">96 · draft</option>
+        <option value="150" selected>150 · normal</option>
+        <option value="220">220 · sharp</option>
+        <option value="300">300 · print</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="group">
+    <button id="btn-undo" class="btn" title="Undo (⌘Z)">↶</button>
+    <button id="btn-redo" class="btn" title="Redo (⇧⌘Z)">↷</button>
+  </div>
+
+  <div class="group">
+    <button id="btn-zoom-out" class="btn" title="Zoom out (−)">−</button>
+    <span id="zoom-label" class="readout">100%</span>
+    <button id="btn-zoom-in" class="btn" title="Zoom in (+)">+</button>
+    <button id="btn-zoom-fit" class="btn" title="Fit page (0)">Fit</button>
+  </div>
+
+  <div class="group right">
+    <button id="btn-save-png" class="btn">Save page PNG</button>
+    <button id="btn-save-pdf" class="btn primary">Save PDF</button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- Tools -->
+  <nav class="tools" id="tools">
+    <button class="tool is-active" data-tool="pencil" title="Pencil (B)">
+      <span class="ico">✏️</span><span class="lbl">Pencil</span>
+    </button>
+    <button class="tool" data-tool="marker" title="Marker / highlighter — darkens without hiding text (M)">
+      <span class="ico">🖍️</span><span class="lbl">Marker</span>
+    </button>
+    <button class="tool" data-tool="eraser" title="Eraser — paints with the background color (E)">
+      <span class="ico">🧽</span><span class="lbl">Eraser</span>
+    </button>
+    <button class="tool" data-tool="line" title="Line — hold Shift to snap (L)">
+      <span class="ico">╱</span><span class="lbl">Line</span>
+    </button>
+    <button class="tool" data-tool="rect" title="Rectangle — filled + white = whiteout (R)">
+      <span class="ico">▭</span><span class="lbl">Box</span>
+    </button>
+    <button class="tool" data-tool="ellipse" title="Ellipse — hold Shift for a circle (O)">
+      <span class="ico">◯</span><span class="lbl">Oval</span>
+    </button>
+    <button class="tool" data-tool="fill" title="Fill bucket (G)">
+      <span class="ico">🪣</span><span class="lbl">Fill</span>
+    </button>
+    <button class="tool" data-tool="text" title="Text — click, type, Enter to commit (T)">
+      <span class="ico">T</span><span class="lbl">Text</span>
+    </button>
+    <button class="tool" data-tool="picker" title="Eyedropper (I)">
+      <span class="ico">💧</span><span class="lbl">Pick</span>
+    </button>
+    <button class="tool" data-tool="select" title="Select — drag a box, drag inside to move, Delete to clear (S)">
+      <span class="ico">⬚</span><span class="lbl">Select</span>
+    </button>
+  </nav>
+
+  <!-- Options for the active tool -->
+  <aside class="options">
+    <div class="opt">
+      <label for="size">Size <span id="size-readout" class="readout">6</span>px</label>
+      <input type="range" id="size" min="1" max="80" value="6" />
+    </div>
+
+    <div class="opt" id="opt-shape" hidden>
+      <label>Shape style</label>
+      <div class="segmented" id="shape-style">
+        <button data-style="stroke" class="is-active">Outline</button>
+        <button data-style="fill">Filled</button>
+        <button data-style="both">Both</button>
+      </div>
+    </div>
+
+    <div class="opt" id="opt-text" hidden>
+      <label for="font-size">Text size</label>
+      <input type="number" id="font-size" min="6" max="200" value="16" />
+      <label for="font-family">Font</label>
+      <select id="font-family">
+        <option value="Helvetica, Arial, sans-serif">Helvetica</option>
+        <option value="Georgia, 'Times New Roman', serif">Georgia</option>
+        <option value="'Courier New', monospace">Courier</option>
+      </select>
+    </div>
+
+    <div class="opt" id="opt-fill" hidden>
+      <label for="tolerance">Fill tolerance <span id="tol-readout" class="readout">32</span></label>
+      <input type="range" id="tolerance" min="0" max="128" value="32" />
+    </div>
+
+    <div class="opt colors">
+      <label>Colors</label>
+      <div class="swatches">
+        <button class="swatch-slot is-active" id="slot-primary" title="Primary — left-drag paints with this">
+          <span id="primary-chip"></span>
+        </button>
+        <button class="swatch-slot" id="slot-secondary" title="Background — eraser and right-drag paint with this">
+          <span id="secondary-chip"></span>
+        </button>
+      </div>
+      <input type="color" id="color-input" value="#111111" />
+      <div class="palette" id="palette"></div>
+      <label class="field inline">
+        Opacity <span id="alpha-readout" class="readout">100%</span>
+        <input type="range" id="alpha" min="5" max="100" value="100" />
+      </label>
+    </div>
+
+    <div class="opt">
+      <button id="btn-clear" class="btn wide">Whiteout page</button>
+      <button id="btn-revert" class="btn wide">Revert page</button>
+    </div>
+  </aside>
+
+  <!-- Canvas -->
+  <main class="workspace" id="workspace">
+    <div class="dropzone" id="dropzone">
+      <div class="dz-inner">
+        <div class="dz-icon">🖼️</div>
+        <h1>Drop a PDF or image here</h1>
+        <p>Every page is rasterized to a bitmap you can paint on. Nothing leaves this machine.</p>
+        <button id="btn-open-2" class="btn primary">Choose a file…</button>
+      </div>
+    </div>
+
+    <div class="stage" id="stage" hidden>
+      <div class="canvas-wrap" id="canvas-wrap">
+        <canvas id="view"></canvas>
+        <textarea id="text-entry" spellcheck="false" hidden></textarea>
+      </div>
+    </div>
+  </main>
+
+  <!-- Pages -->
+  <aside class="pages" id="pages">
+    <div class="pages-head">Pages</div>
+    <div class="thumbs" id="thumbs"></div>
+  </aside>
+</div>
+
+<footer class="statusbar">
+  <span id="status-file">No file open</span>
+  <span id="status-page"></span>
+  <span id="status-pos"></span>
+  <span id="status-msg" class="right"></span>
+</footer>
+
+<input type="file" id="file-input" accept="application/pdf,image/png,image/jpeg,image/webp" multiple hidden />
+
+<!-- pdf-lib is loaded lazily by app.js on the first export. -->
+<script type="module" src="app.js"></script>
+</body>
+</html>
