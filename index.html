@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PDF Paint — paint on any PDF, privately</title>
-<meta name="description" content="Rasterize a PDF and paint on it with MS-Paint-style tools, then save it back to PDF. Runs entirely in your browser — no upload, no account, no server." />
+<title>Micro Paint</title>
+<meta name="description" content="A tiny paint program that runs in your browser. Draw on a blank canvas, or open an image or PDF and mark it up. No account, no install." />
 <meta name="theme-color" content="#1b1d21" />
 <meta name="color-scheme" content="dark" />
 <link rel="stylesheet" href="style.css" />
@@ -15,19 +15,11 @@
 <body>
 
 <header class="topbar">
-  <div class="brand">🖌️ PDF&nbsp;Paint</div>
+  <div class="brand">🎨 Micro&nbsp;Paint</div>
 
   <div class="group">
-    <button id="btn-open" class="btn primary">Open PDF / Image</button>
-    <label class="field" title="Rasterization quality — set before opening a file">
-      DPI
-      <select id="dpi">
-        <option value="96">96 · draft</option>
-        <option value="150" selected>150 · normal</option>
-        <option value="220">220 · sharp</option>
-        <option value="300">300 · print</option>
-      </select>
-    </label>
+    <button id="btn-new" class="btn primary">New canvas</button>
+    <button id="btn-open" class="btn">Open…</button>
   </div>
 
   <div class="group">
@@ -43,8 +35,8 @@
   </div>
 
   <div class="group right">
-    <button id="btn-save-png" class="btn">Save page PNG</button>
-    <button id="btn-save-pdf" class="btn primary">Save PDF</button>
+    <button id="btn-save-png" class="btn primary">Save PNG</button>
+    <button id="btn-save-pdf" class="btn">Save as PDF</button>
   </div>
 </header>
 
@@ -134,8 +126,18 @@
     </div>
 
     <div class="opt">
-      <button id="btn-clear" class="btn wide">Whiteout page</button>
-      <button id="btn-revert" class="btn wide">Revert page</button>
+      <button id="btn-clear" class="btn wide">Clear canvas</button>
+      <button id="btn-revert" class="btn wide">Revert to original</button>
+    </div>
+
+    <div class="opt import">
+      <label for="dpi">Import quality</label>
+      <select id="dpi" title="How finely a PDF or image is rasterized. Set this before opening the file.">
+        <option value="96">96 dpi · draft</option>
+        <option value="150" selected>150 dpi · normal</option>
+        <option value="220">220 dpi · sharp</option>
+        <option value="300">300 dpi · print</option>
+      </select>
     </div>
   </aside>
 
@@ -143,10 +145,18 @@
   <main class="workspace" id="workspace">
     <div class="dropzone" id="dropzone">
       <div class="dz-inner">
-        <div class="dz-icon">🖼️</div>
-        <h1>Drop a PDF or image here</h1>
-        <p>Every page is rasterized to a bitmap you can paint on. Nothing leaves this machine.</p>
-        <button id="btn-open-2" class="btn primary">Choose a file…</button>
+        <h1>Start painting</h1>
+        <p>Pick a canvas size, or drop in an image or PDF to draw on top of.</p>
+        <div class="dz-sizes" id="dz-sizes">
+          <button data-w="1000" data-h="700">1000 × 700</button>
+          <button data-w="1280" data-h="800">1280 × 800</button>
+          <button data-w="1000" data-h="1000">Square</button>
+          <button data-w="1275" data-h="1650">US Letter</button>
+        </div>
+        <div class="dz-actions">
+          <button id="btn-new-2" class="btn primary">New canvas…</button>
+          <button id="btn-open-2" class="btn">Open image or PDF…</button>
+        </div>
       </div>
     </div>
 
@@ -158,15 +168,35 @@
     </div>
   </main>
 
-  <!-- Pages -->
-  <aside class="pages" id="pages">
+  <!-- Pages — only shown for multi-page documents -->
+  <aside class="pages" id="pages" hidden>
     <div class="pages-head">Pages</div>
     <div class="thumbs" id="thumbs"></div>
   </aside>
 </div>
 
+<dialog id="new-dialog">
+  <form method="dialog" class="dlg">
+    <h2>New canvas</h2>
+    <div class="dlg-row">
+      <label>Width <input type="number" id="new-w" min="16" max="8000" value="1000" /></label>
+      <label>Height <input type="number" id="new-h" min="16" max="8000" value="700" /></label>
+    </div>
+    <div class="dz-sizes" id="dlg-sizes">
+      <button type="button" data-w="1000" data-h="700">1000 × 700</button>
+      <button type="button" data-w="1280" data-h="800">1280 × 800</button>
+      <button type="button" data-w="1000" data-h="1000">Square</button>
+      <button type="button" data-w="1275" data-h="1650">US Letter</button>
+    </div>
+    <div class="dlg-actions">
+      <button value="cancel" class="btn">Cancel</button>
+      <button value="create" id="new-create" class="btn primary">Create</button>
+    </div>
+  </form>
+</dialog>
+
 <footer class="statusbar">
-  <span id="status-file">No file open</span>
+  <span id="status-file">No canvas yet</span>
   <span id="status-page"></span>
   <span id="status-pos"></span>
   <span id="status-msg" class="right"></span>

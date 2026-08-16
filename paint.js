@@ -44,6 +44,47 @@ const hexToRgb = (hex) => {
 const rgbToHex = (r, g, b) =>
   `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
 
+/* ------------------------------------------------------------------ canvases */
+
+// A blank sheet — the normal way to start a paint program.
+function newCanvas(w, h) {
+  if (state.dirty && !confirm('Start a new canvas and discard the current one?')) return;
+  const base = document.createElement('canvas');
+  base.width = Math.min(8000, Math.max(16, Math.round(w)));
+  base.height = Math.min(8000, Math.max(16, Math.round(h)));
+  const ctx = base.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, base.width, base.height);
+
+  state.pages = [makePage(base, (base.width * 72) / 96, (base.height * 72) / 96, true)];
+  state.index = 0;
+  state.fileName = 'untitled';
+  state.dirty = false;
+  sel = { rect: null, float: null, ox: 0, oy: 0 };
+  showCanvas();
+  flash(`New ${base.width} × ${base.height} canvas.`);
+}
+
+// Swap the empty state for the canvas, and keep the page rail out of the way
+// unless there is actually more than one page to move between.
+function showCanvas() {
+  $('dropzone').hidden = true;
+  $('stage').hidden = false;
+  $('pages').hidden = state.pages.length < 2;
+  document.body.classList.toggle('has-pages', state.pages.length > 1);
+  buildThumbs();
+  paintView();
+  zoomFit();
+  syncHistoryButtons();
+  const p = page();
+  setStatus(
+    state.pages.length > 1
+      ? `${state.fileName} · ${state.pages.length} pages`
+      : `${state.fileName} · ${p.base.width} × ${p.base.height}`,
+    'file',
+  );
+}
+
 /* ------------------------------------------------------------------ loading */
 
 async function openFiles(fileList) {
@@ -51,6 +92,14 @@ async function openFiles(fileList) {
   if (!files.length) return;
   const dpi = Number($('dpi').value);
   busy(true, 'Rasterizing…');
+
+  // An untouched blank canvas is scaffolding, not work — opening a file replaces it.
+  // Anything you've painted on is kept, and the new pages are appended after it.
+  if (state.pages.length === 1 && state.pages[0].isBlank && !state.dirty) {
+    state.pages = [];
+    state.fileName = 'untitled';
+  }
+  const firstNew = state.pages.length;
 
   try {
     for (const file of files) {
@@ -61,13 +110,8 @@ async function openFiles(fileList) {
       }
       if (state.fileName === 'untitled') state.fileName = file.name.replace(/\.[^.]+$/, '');
     }
-    $('dropzone').hidden = true;
-    $('stage').hidden = false;
-    state.index = Math.min(state.index, state.pages.length - 1);
-    buildThumbs();
-    paintView();
-    zoomFit();
-    setStatus(`${state.fileName} · ${state.pages.length} page${state.pages.length === 1 ? '' : 's'}`, 'file');
+    state.index = Math.min(firstNew, state.pages.length - 1); // land on what was just opened
+    showCanvas();
     flash('Ready — pick a tool and paint.');
   } catch (err) {
     console.error(err);
@@ -122,7 +166,7 @@ async function addImage(file, dpi) {
   state.pages.push(makePage(base, (base.width * 72) / dpi, (base.height * 72) / dpi));
 }
 
-function makePage(base, wPt, hPt) {
+function makePage(base, wPt, hPt, isBlank = false) {
   const orig = document.createElement('canvas');
   orig.width = base.width;
   orig.height = base.height;
@@ -133,6 +177,7 @@ function makePage(base, wPt, hPt) {
     orig,
     wPt,
     hPt,
+    isBlank,
     undo: [],
     redo: [],
     thumb: null,
@@ -188,6 +233,9 @@ function syncHistoryButtons() {
   const p = page();
   $('btn-undo').disabled = !p || !p.undo.length;
   $('btn-redo').disabled = !p || !p.redo.length;
+  // Nothing to clear, revert, or save until there is a canvas.
+  ['btn-clear', 'btn-save-png', 'btn-save-pdf'].forEach((id) => { $(id).disabled = !p; });
+  $('btn-revert').disabled = !p || p.isBlank;
 }
 
 /* ------------------------------------------------------------------ painting */
@@ -613,7 +661,7 @@ function buildThumbs() {
     p.thumb = c;
     drawThumb(p);
   });
-  setStatus(`Page ${state.index + 1} / ${state.pages.length}`, 'page');
+  setStatus(state.pages.length > 1 ? `Page ${state.index + 1} / ${state.pages.length}` : '', 'page');
 }
 
 function drawThumb(p) {
@@ -755,6 +803,33 @@ function busy(on, msg = '') {
 
 $('btn-open').addEventListener('click', () => $('file-input').click());
 $('btn-open-2').addEventListener('click', () => $('file-input').click());
+
+// New canvas: size presets on the empty state, a small dialog everywhere else.
+const newDialog = $('new-dialog');
+document.querySelectorAll('#dz-sizes button').forEach((b) => {
+  b.addEventListener('click', () => newCanvas(Number(b.dataset.w), Number(b.dataset.h)));
+});
+document.querySelectorAll('#dlg-sizes button').forEach((b) => {
+  b.addEventListener('click', () => {
+    $('new-w').value = b.dataset.w;
+    $('new-h').value = b.dataset.h;
+  });
+});
+const openNewDialog = () => {
+  const p = page();
+  if (p) {
+    $('new-w').value = p.base.width;
+    $('new-h').value = p.base.height;
+  }
+  newDialog.showModal();
+};
+$('btn-new').addEventListener('click', openNewDialog);
+$('btn-new-2').addEventListener('click', openNewDialog);
+newDialog.addEventListener('close', () => {
+  if (newDialog.returnValue === 'create') {
+    newCanvas(Number($('new-w').value), Number($('new-h').value));
+  }
+});
 $('file-input').addEventListener('change', (e) => {
   openFiles(e.target.files);
   e.target.value = '';

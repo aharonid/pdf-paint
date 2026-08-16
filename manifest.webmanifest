@@ -1,7 +1,7 @@
 {
-  "name": "PDF Paint",
-  "short_name": "PDF Paint",
-  "description": "Paint on PDF pages in your browser. Nothing is uploaded.",
+  "name": "Micro Paint",
+  "short_name": "Micro Paint",
+  "description": "A tiny paint program in your browser. Draw on a blank canvas, or open an image or PDF to mark up.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#1b1d21",
