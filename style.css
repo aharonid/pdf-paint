@@ -14,6 +14,10 @@
 
 * { box-sizing: border-box; }
 
+/* Author `display` rules outrank the UA sheet's [hidden] {display:none}, and several
+   elements here are toggled with .hidden = true. Make the attribute win. */
+[hidden] { display: none !important; }
+
 html, body {
   height: 100%;
   margin: 0;
