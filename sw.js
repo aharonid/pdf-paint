@@ -7,7 +7,7 @@ const CACHE = 'pdf-paint-v1';
 const SHELL = [
   './',
   './index.html',
-  './app.js',
+  './paint.js',
   './style.css',
   './vendor/pdf.min.mjs',
   './vendor/pdf.worker.min.mjs',

@@ -1,3 +1,6 @@
+# Local dev only — excluded so Vercel treats this as a pure static site
+# instead of auto-detecting a Node.js server entrypoint.
+package.json
 server.js
 Start PDF Paint.command
 README.md
