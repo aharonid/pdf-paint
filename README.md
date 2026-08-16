@@ -1,6 +1,6 @@
 # Micro Paint
 
-**Live: https://micro-paint.vercel.app**
+**Live: https://micropaint.vercel.app**
 
 A tiny paint program that runs in a browser tab. Start on a blank canvas with MS-Paint-style
 tools — pencil, marker, shapes, fill bucket, text, selection.
