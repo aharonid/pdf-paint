@@ -1,5 +1,5 @@
-// PDF Paint — rasterize a PDF, then paint on it like a tiny MS Paint.
-// Everything runs locally: pdf.js rasterizes, canvas edits the pixels, pdf-lib repacks.
+// Micro Paint — a small canvas paint program. Images and PDFs can be imported
+// as canvases: pdf.js rasterizes the pages, canvas edits the pixels, pdf-lib repacks.
 
 import * as pdfjsLib from './vendor/pdf.min.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdf.worker.min.mjs';

@@ -1,8 +1,8 @@
-// Offline shell for PDF Paint.
+// Offline shell for Micro Paint.
 // Caches the app's own code only. No user document ever reaches this cache —
 // PDFs are read into memory in the page and never fetched through the network.
 
-const CACHE = 'pdf-paint-v1';
+const CACHE = 'micro-paint-v2';
 
 const SHELL = [
   './',

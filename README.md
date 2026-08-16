@@ -1,6 +1,6 @@
 # Micro Paint
 
-**Live: https://pdf-paint.vercel.app**
+**Live: https://micro-paint.vercel.app**
 
 A tiny paint program that runs in a browser tab. Start on a blank canvas with MS-Paint-style
 tools — pencil, marker, shapes, fill bucket, text, selection.
@@ -13,10 +13,10 @@ No build step and no npm install — `pdf.js` and `pdf-lib` are vendored in `ven
 
 ## Run it
 
-Double-click **Start PDF Paint.command**, or from a terminal:
+Double-click **Start Micro Paint.command**, or from a terminal:
 
 ```bash
-cd ~/Downloads/pdf-paint
+cd ~/Downloads/micro-paint
 node server.js       # or: npm start
 ```
 

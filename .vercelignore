@@ -2,6 +2,6 @@
 # instead of auto-detecting a Node.js server entrypoint.
 package.json
 server.js
-Start PDF Paint.command
+Start Micro Paint.command
 README.md
 .git

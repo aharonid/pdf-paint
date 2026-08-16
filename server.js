@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Zero-dependency static server for PDF Paint.
+// Zero-dependency static server for Micro Paint.
 // A server is required (not file://) because pdf.js ships as an ES module + web worker.
 
 const http = require('http');
@@ -60,7 +60,7 @@ function listen(port) {
   });
   server.listen(port, '127.0.0.1', () => {
     const url = `http://127.0.0.1:${port}/`;
-    console.log(`\n  PDF Paint running at ${url}`);
+    console.log(`\n  Micro Paint running at ${url}`);
     console.log('  Press Ctrl+C to stop.\n');
     if (!process.env.NO_OPEN && process.platform === 'darwin') execFile('open', [url]);
   });

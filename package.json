@@ -1,8 +1,8 @@
 {
-  "name": "pdf-paint",
+  "name": "micro-paint",
   "version": "1.0.0",
   "private": true,
-  "description": "Local PDF-to-bitmap paint editor. No dependencies at runtime — pdf.js and pdf-lib are vendored in ./vendor.",
+  "description": "A tiny browser paint program. Draw on a blank canvas, or open an image or PDF to mark up. No dependencies at runtime \u2014 pdf.js and pdf-lib are vendored in ./vendor.",
   "scripts": {
     "start": "node server.js"
   }
